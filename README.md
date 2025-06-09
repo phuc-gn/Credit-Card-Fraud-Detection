@@ -13,20 +13,29 @@ Techonologies used in this project are:
 - LightGBM
 - SHAP
 - MLflow
+- FastAPI
+- Docker
 
 ## Project Structure
 
 The project is structured as follows:
 
 ```
+app/
+    api_test.sh         # Script to test the API
+    app.py              # FastAPI application
+    requirements.txt    # Requirements for the FastAPI app
+    Dockerfile          # Dockerfile to build the FastAPI app image
 data/
-    creditcard.csv
+    creditcard.csv      # The dataset used in the project
+models/
+    *.pkl               # Trained models will be saved here
 notebooks/
-    EDA.ipynb
-    explain.ipynb
+    EDA.ipynb           # Jupyter notebook for exploratory data analysis
+    explain.ipynb       # Jupyter notebook for model explanation using SHAP
+requirements.txt        # Requirements for the project
+train.py                # Script to train the models
 README.md
-requirements.txt
-train.py
 .gitignore
 ```
 
@@ -38,7 +47,9 @@ After peeking into the data, we can see that the data is highly unbalanced. The 
 
 ## Model Training
 
-We will train a few machine learning models to detect credit card fraud. The models we will train are: XGBoost, LightGBM. We will use the following metrics to evaluate the models: precision, recall, f1-score, and ROC-AUC.
+We will train a few machine learning models to detect credit card fraud. The models we will train are: XGBoost, LightGBM. RandomForest, Logistic Regression and other classification algorithms will not be used in this project since their training time is too long and they do not perform well on this dataset.
+
+Due to the highly unbalanced dataset, we will use stratified k-fold cross-validation to evaluate the models. The dataset will be split into 5 folds, with each fold containing the same proportion of fraud and non-fraud transactions.
 
 Grid search will be used to find the best hyperparameters for each model and the best model will be selected based on the `f1` score.
 
@@ -74,6 +85,44 @@ Since having a balanced precision and recall is important in this case. Low prec
 ## Model Explanation
 
 We will use SHAP to explain the model. For detailed explanation, please refer to the `explain.ipynb` notebook.
+
+## Deployment
+The trained model can be deployed using FastAPI. The API will accept a JSON object with the following structure:
+
+```json
+{
+    "Time": 0,
+    "V1": 0.1,
+    "V2": 0.2,
+    ...
+    "V28": 0.3,
+    "Amount": 100.0
+}
+```
+The API will return a JSON object with the following structure:
+
+```json
+{
+    "prediction": 0,
+}
+```
+
+The FastAPI application can be run using Docker. The Dockerfile is provided in the `app` directory. To build the Docker image, run the following command in the `app` directory:
+
+```bash
+docker build -t credit-card-fraud-detection .
+```
+To run the Docker container, use the following command:
+
+```bash
+docker run -p 8000:8000 --rm credit-card-fraud-detection
+```
+
+To test the API, you can use the provided `api_test.sh` script. Make sure to run the FastAPI application first.
+
+```bash
+./api_test.sh
+```
 
 ## Conclusion
 
